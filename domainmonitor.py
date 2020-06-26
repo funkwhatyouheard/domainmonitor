@@ -40,11 +40,11 @@ def create_csv(domains=[],fields=['fuzzer','domain-name','dns-a','dns-aaaa','dns
 	return '\n'.join(csv)
 
 def _exit(code):
-		print(dnstwist.FG_RST + dnstwist.ST_RST, end='')
-		sys.exit(code)
+	print(dnstwist.FG_RST + dnstwist.ST_RST, end='')
+	sys.exit(code)
 
 def p_cli(text):
-		if args.format == 'cli': print(text, end='', flush=True)
+	if args.format == 'cli': print(text, end='', flush=True)
 
 def p_err(text):
 	print(text, file=sys.stderr, flush=True)
