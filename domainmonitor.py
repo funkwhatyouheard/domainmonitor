@@ -7,7 +7,9 @@ import signal
 import time
 import argparse
 import warnings
-from os import path
+from os import path, environ
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 import json
 import queue
 
@@ -394,9 +396,27 @@ def compareData(old_domains,new_domains,comparison_keys):
 				report_list[origin_domain].append(fuzzed)
 	return report_list
 
-def monitor_domains(domain_list = r"./domains.txt",data_file = r"./domainData.json",
+def send_email_report(from_email,to_emails,html_content,subject="Domain Monitor Report"):
+	# using SendGrid's Python Library
+	# https://github.com/sendgrid/sendgrid-python
+	# assumes API key in SENDGRID_API_KEY environment variable
+	message = Mail(from_email,to_emails,subject,html_content)
+	try:
+		sg = SendGridAPIClient(environ.get('SENDGRID_API_KEY'))
+		response = sg.send(message)
+		print(response.status_code)
+		print(response.body)
+		print(response.headers)
+	except Exception as e:
+		print(e.message)
+
+def generate_email_body(domains):
+	#make it pretty and only show changes
+	return
+
+def domain_monitor(domain_list = r"./domains.txt",data_file = r"./domainData.json",
 base_options = {"registered":True,"geoip":True,"ssdeep":True,"nameservers":["8.8.8.8","4.4.4.4"],"threadcount":25},
-new_origin_options = {}):
+new_origin_options = {},from_email=None,to_emails=None):
 	""" This function is meant to monitor domains read from a new line delimited file.
 	It will compare against ./domainData.json if it exists, if not results will be written there
 	for future comparison. The base_options parameter is passed for all domains that dnstwist is run on.
@@ -472,7 +492,11 @@ new_origin_options = {}):
 		json.dump(fuzzed_domains, outfile)
 
 	#TODO: fire off report by whatever means 
-	return report_list
+	if from_email is not None and to_emails is not None:
+		html = generate_email_body(report_list)
+		send_email_report(from_email,to_emails,html)
+	else:
+		return report_list
 
 if __name__ == "__main__":
-	monitor_domains()
+	domain_monitor()
