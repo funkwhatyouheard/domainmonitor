@@ -411,8 +411,21 @@ def send_email_report(from_email,to_emails,html_content,subject="Domain Monitor 
 		print(e.message)
 
 def generate_email_body(domains):
-	#make it pretty and only show changes
-	return
+	#make it pretty
+	html = "<head><style>table, th, td {border: 1px solid black;border-collapse: collapse;}</style></head>"
+	for _,d in enumerate(domains):
+		html += f"<table><caption>{d}</caption><tr>"
+		keys = [k for _, k in enumerate(domains[d][0])]
+		for key in keys:
+			html += f"<th>{key}</th>"
+		html += "</tr>"
+		for _,permutation in enumerate(domains[d]):
+			html += "<tr>"
+			for key in keys:
+				html += f"<td>{permutation[key]}</td>"
+			html += "</tr>"
+		html += "</table>"
+	return html
 
 def domain_monitor(domain_list = r"./domains.txt",data_file = r"./domainData.json",
 base_options = {"registered":True,"geoip":True,"ssdeep":True,"nameservers":["8.8.8.8","4.4.4.4"],"threadcount":25},
@@ -491,7 +504,7 @@ new_origin_options = {},from_email=None,to_emails=None):
 	with open(data_file,"w") as outfile:
 		json.dump(fuzzed_domains, outfile)
 
-	#TODO: fire off report by whatever means 
+	#fire off reprot with sendgrid, there are certainly other methods here
 	if from_email is not None and to_emails is not None:
 		html = generate_email_body(report_list)
 		send_email_report(from_email,to_emails,html)
